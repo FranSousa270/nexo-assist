@@ -134,8 +134,6 @@ export async function updateTicket(
   });
 }
 
-
-
 export async function findDuplicateTicket(
   employeeEmail: string,
   type: "INCIDENT" | "REQUEST",
@@ -146,6 +144,7 @@ export async function findDuplicateTicket(
     | "SOFTWARE"
     | "EMAIL"
     | "OTHER",
+  title: string,
 ) {
   const employee = await prisma.user.findUnique({
     where: { email: employeeEmail },
@@ -163,6 +162,10 @@ export async function findDuplicateTicket(
       category,
       status: {
         in: ["OPEN", "IN_PROGRESS", "WAITING"],
+      },
+      title: {
+        equals: title.trim(),
+        mode: "insensitive",
       },
     },
     select: {
