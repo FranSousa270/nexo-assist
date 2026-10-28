@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma.js";
 import type { createTicketSchema } from "../schemas/create-ticket.schema.js";
 import type { z } from "zod";
+import { calculateSlaDeadline } from "./sla.services.js";
 
 type CreateTicketInput = z.infer<typeof createTicketSchema>;
 
@@ -52,16 +53,19 @@ export async function createTicket(input: CreateTicketInput) {
 
   const prefix = ticketData.type === "INCIDENT" ? "INC" : "REQ";
   const number = `${prefix}-${randomUUID().slice(0, 8).toUpperCase()}`;
+  const dueAt = calculateSlaDeadline(ticketData.priority);
 
   return prisma.ticket.create({
     data: {
       ...ticketData,
       number,
+      dueAt,
       affectedUserId: employee.id,
       createdById: employee.id,
     },
     select: {
       number: true,
+      dueAt: true,
       title: true,
       description: true,
       type: true,
